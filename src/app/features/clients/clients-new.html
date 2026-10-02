@@ -1,0 +1,371 @@
+<section class="clients-page">
+  <header class="clients-header">
+    <div class="clients-header__title-wrap">
+      <span class="clients-header__icon" aria-hidden="true">
+        <svg [lucideIcon]="icons.users" viewBox="0 0 24 24"></svg>
+      </span>
+
+      <div class="clients-header__text">
+        <h1>Directorio de Clientes</h1>
+        <p>Gestione las empresas y personas que tienen servicios o productos contratados</p>
+      </div>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="openRegisterModal()">+ Registrar Cliente</button>
+  </header>
+
+  <div class="toolbar">
+    <label class="search-field" aria-label="Buscar clientes">
+      <svg [lucideIcon]="icons.search" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <input type="text" placeholder="Buscar por cliente, empresa, correo o RNC..." [(ngModel)]="searchTerm" />
+    </label>
+
+    <select class="filter-select" [(ngModel)]="statusFilter" aria-label="Filtrar por estado">
+      <option value="todos">Todos los Estados</option>
+      <option value="activos">Solo Activos</option>
+      <option value="inactivos">Solo Inactivos</option>
+    </select>
+  </div>
+
+  <div class="table-panel">
+    <table class="clients-table" aria-label="Directorio de clientes">
+      <thead>
+        <tr>
+          <th>Empresa / Cliente</th>
+          <th>Contacto Directo</th>
+          <th>Servicios Contratados</th>
+          <th>Cobro Mensual</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let client of filteredClients">
+          <td class="company-cell">
+            <div class="company-cell__icon" aria-hidden="true">
+              <svg [lucideIcon]="icons.building" viewBox="0 0 24 24"></svg>
+            </div>
+
+            <div class="company-cell__meta">
+              <strong>{{ client.companyName }}</strong>
+              <small>RNC: {{ client.rnc }}</small>
+            </div>
+          </td>
+
+          <td class="contact-cell">
+            <div class="contact-cell__name">{{ client.contactName }}</div>
+
+            <div class="contact-cell__row">
+              <span class="contact-line">
+                <svg [lucideIcon]="icons.mail" viewBox="0 0 24 24" aria-hidden="true"></svg>
+                <span>{{ client.email }}</span>
+              </span>
+
+              <span class="contact-line">
+                <svg [lucideIcon]="icons.phone" viewBox="0 0 24 24" aria-hidden="true"></svg>
+                <span>{{ client.phone }}</span>
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <div class="services-pill">
+              <span class="services-pill__count">{{ client.services.length }} activo(s)</span>
+              <button class="mini-btn" type="button" aria-label="Agregar servicio">
+                <svg [lucideIcon]="icons.plus" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+            </div>
+          </td>
+
+          <td class="mrr-cell">
+            <div class="mrr-cell__amount">{{ getTotalMonthlyFee(client.services) }}</div>
+            <small>/mes</small>
+          </td>
+
+          <td>
+            <span class="status-badge" [class.is-inactive]="client.status === 'Inactivo'">
+              {{ client.status }}
+            </span>
+          </td>
+
+          <td class="actions-cell">
+            <div class="actions" aria-label="Acciones del cliente">
+              <button class="action-btn" type="button" aria-label="Ver detalles" (click)="openDetailModal(client)">
+                <svg [lucideIcon]="icons.eye" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn" type="button" aria-label="Editar cliente" (click)="openEditModal(client)">
+                <svg [lucideIcon]="icons.pencil" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn" type="button" aria-label="Cambiar estado" (click)="toggleClientStatus(client)">
+                <svg [lucideIcon]="icons.power" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn danger" type="button" aria-label="Eliminar cliente" (click)="deleteClient(client)">
+                <svg [lucideIcon]="icons.trash" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MODAL 1: REGISTER NEW CLIENT -->
+  <div class="modal-overlay" *ngIf="isRegisterModalOpen" (click)="closeRegisterModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg [lucideIcon]="icons.users" viewBox="0 0 24 24" class="modal-icon" aria-hidden="true"></svg>
+          <div class="modal-title-text">
+            <h2>Registrar Nuevo Cliente</h2>
+            <p>Complete la información comercial y de contacto</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" type="button" (click)="closeRegisterModal()">
+          <svg [lucideIcon]="icons.x" viewBox="0 0 24 24" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Empresa / Razón Social <span class="required">*</span></label>
+            <input type="text" [(ngModel)]="formData.companyName" placeholder="Ej. TechSolutions SRL" />
+          </div>
+          <div class="form-group">
+            <label>Nombre de Contacto <span class="required">*</span></label>
+            <input type="text" [(ngModel)]="formData.contactName" placeholder="Ej. Carlos Mendoza" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Correo Electrónico <span class="required">*</span></label>
+            <input type="email" [(ngModel)]="formData.email" placeholder="ejemplo@empresa.com" />
+          </div>
+          <div class="form-group">
+            <label>Teléfono / WhatsApp</label>
+            <input type="tel" [(ngModel)]="formData.phone" placeholder="(809) 555-0000" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>RNC / DNI / Identificación Fiscal</label>
+            <input type="text" [(ngModel)]="formData.rnc" placeholder="Ej. 131-88942-1" />
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select [(ngModel)]="formData.status">
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Dirección Física</label>
+          <input type="text" [(ngModel)]="formData.address" placeholder="Av. Principal #123, Sector" />
+        </div>
+
+        <div class="form-group">
+          <label>Observaciones / Notas Internas</label>
+          <textarea [(ngModel)]="formData.notes" placeholder="Comentarios adicionales sobre preferencias o facturación..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" type="button" (click)="closeRegisterModal()">Cancelar</button>
+        <button class="btn-primary" type="button" (click)="registerClient()">Registrar Cliente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: VIEW DETAILS -->
+  <div class="modal-overlay" *ngIf="isDetailModalOpen" (click)="closeDetailModal()">
+    <div class="modal modal-detail" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="detail-header">
+          <div class="detail-avatar">{{ selectedClient?.companyName.charAt(0).toUpperCase() }}</div>
+          <div class="detail-info">
+            <h2>{{ selectedClient?.companyName }}</h2>
+            <span class="status-badge" [class.is-inactive]="selectedClient?.status === 'Inactivo'">
+              {{ selectedClient?.status }}
+            </span>
+          </div>
+        </div>
+        <button class="modal-close-btn" type="button" (click)="closeDetailModal()">
+          <svg [lucideIcon]="icons.x" viewBox="0 0 24 24" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal-body detail-body">
+        <div class="detail-contact-info">
+          <div class="contact-item">
+            <svg [lucideIcon]="icons.mail" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <span>{{ selectedClient?.email }}</span>
+          </div>
+          <div class="contact-item">
+            <svg [lucideIcon]="icons.phone" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <span>{{ selectedClient?.phone }}</span>
+          </div>
+          <div class="contact-item">
+            <svg [lucideIcon]="icons.package" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <span>RNC: {{ selectedClient?.rnc }}</span>
+          </div>
+        </div>
+
+        <div class="detail-address">
+          <strong>Dirección</strong>
+          <p>{{ selectedClient?.address }}</p>
+        </div>
+
+        <div class="detail-services" *ngIf="selectedClient?.services.length! > 0">
+          <div class="services-header">
+            <h3>Servicios / Productos Contratados ({{ selectedClient?.services.length }})</h3>
+            <span class="total-monthly">Monto recurrente mensual total: <strong>{{ getTotalMonthlyFee(selectedClient?.services || []) }}</strong></span>
+          </div>
+          <button class="btn-contract-service" type="button">
+            <svg [lucideIcon]="icons.plus" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            + Contratar Servicio
+          </button>
+
+          <div class="services-list">
+            <div class="service-item" *ngFor="let service of selectedClient?.services">
+              <div class="service-title">
+                <strong>{{ service.serviceName }}</strong>
+                <span class="service-status-badge">{{ service.status }}</span>
+              </div>
+              <div class="service-meta">
+                <span>Tipo: {{ service.serviceType }} • Categoría: {{ service.category }}</span>
+              </div>
+              <div class="service-dates">
+                <div class="date-item">
+                  <span class="date-label">F. CONTRATACIÓN</span>
+                  <svg [lucideIcon]="icons.clock" viewBox="0 0 24 24" aria-hidden="true"></svg>
+                  <span>{{ service.contractDate }}</span>
+                </div>
+                <div class="date-item" *ngIf="service.renewalDate">
+                  <span class="date-label">F. RENOVACIÓN</span>
+                  <svg [lucideIcon]="icons.clock" viewBox="0 0 24 24" aria-hidden="true"></svg>
+                  <span>{{ service.renewalDate }}</span>
+                </div>
+              </div>
+              <div class="service-pricing">
+                <div class="price-item">
+                  <span class="price-label">COBRO MENSUAL</span>
+                  <span class="price-value">{{ service.monthlyFee }}</span>
+                </div>
+                <div class="price-item">
+                  <span class="price-label">MONTO TOTAL</span>
+                  <span class="price-value">{{ service.totalAmount }}</span>
+                </div>
+              </div>
+              <button class="btn-renew" type="button">
+                <svg [lucideIcon]="icons.clock" viewBox="0 0 24 24" aria-hidden="true"></svg>
+                Renovar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" type="button" (click)="closeDetailModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: EDIT CLIENT -->
+  <div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg [lucideIcon]="icons.users" viewBox="0 0 24 24" class="modal-icon" aria-hidden="true"></svg>
+          <div class="modal-title-text">
+            <h2>Editar Cliente</h2>
+            <p>Modifique los datos generales y de contacto del cliente</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" type="button" (click)="closeEditModal()">
+          <svg [lucideIcon]="icons.x" viewBox="0 0 24 24" aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Empresa / Razón Social <span class="required">*</span></label>
+            <input type="text" [(ngModel)]="formData.companyName" />
+          </div>
+          <div class="form-group">
+            <label>Nombre de Contacto <span class="required">*</span></label>
+            <input type="text" [(ngModel)]="formData.contactName" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Correo Electrónico <span class="required">*</span></label>
+            <input type="email" [(ngModel)]="formData.email" />
+          </div>
+          <div class="form-group">
+            <label>Teléfono / WhatsApp</label>
+            <input type="tel" [(ngModel)]="formData.phone" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>RNC / DNI / Identificación Fiscal</label>
+            <input type="text" [(ngModel)]="formData.rnc" />
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select [(ngModel)]="formData.status">
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Dirección Física</label>
+          <input type="text" [(ngModel)]="formData.address" />
+        </div>
+
+        <div class="form-group">
+          <label>Observaciones / Notas Internas</label>
+          <textarea [(ngModel)]="formData.notes"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" type="button" (click)="closeEditModal()">Cancelar</button>
+        <button class="btn-primary" type="button" (click)="editClient()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: CONFIRMATION (Reusable) -->
+  <div class="modal-overlay" *ngIf="isConfirmModalOpen" (click)="cancelAction()">
+    <div class="modal modal-confirm" (click)="$event.stopPropagation()">
+      <div class="confirm-icon-box" [class.is-red]="confirmationConfig?.iconColor === 'red'">
+        <svg [lucideIcon]="confirmationConfig?.iconColor === 'red' ? icons.alertTriangle : icons.alertTriangle" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      </div>
+
+      <h2>{{ confirmationConfig?.title }}</h2>
+      <p>{{ confirmationConfig?.message }}</p>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" type="button" (click)="cancelAction()">Cancelar</button>
+        <button class="btn-confirm" type="button" [class.is-red]="confirmationConfig?.buttonColor === 'red'" (click)="confirmAction()">
+          {{ confirmationConfig?.buttonText }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

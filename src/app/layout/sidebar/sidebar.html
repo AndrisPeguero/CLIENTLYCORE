@@ -1,0 +1,19 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-box">
+      <span class="logo-title">CLIENTLYCORE</span>
+      <span class="logo-subtitle">Client & Contract Management</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <ul>
+      <li *ngFor="let item of navItems">
+        <a [routerLink]="item.path" routerLinkActive="active" class="nav-link">
+          <svg [lucideIcon]="item.icon" class="nav-icon" aria-hidden="true"></svg>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>

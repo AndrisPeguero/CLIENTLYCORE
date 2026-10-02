@@ -1,0 +1,156 @@
+<section class="types-page">
+  <header class="section-header">
+    <div class="section-header__title-wrap">
+      <span class="section-header__icon" aria-hidden="true">
+        <svg [lucideIcon]="icons.calendar" viewBox="0 0 24 24"></svg>
+      </span>
+
+      <div class="section-header__text">
+        <h1>Tipos y Periodos de Contratación</h1>
+        <p>Configure los ciclos de renovación: Pago Único, Semana, Mensual, Semestral, Anual o personalizados</p>
+      </div>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="openCreateModal()">+ Crear Nuevo Periodo</button>
+  </header>
+
+  <div class="toolbar">
+    <label class="search-field" aria-label="Buscar periodo">
+      <svg [lucideIcon]="icons.search" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <input type="text" placeholder="Buscar por nombre o descripción del periodo..." [(ngModel)]="searchQuery" />
+    </label>
+  </div>
+
+  <div class="table-panel">
+    <table class="types-table" aria-label="Tipos de contratación">
+      <thead>
+        <tr>
+          <th>Periodo / Modalidad</th>
+          <th>Duración del Ciclo</th>
+          <th>Frecuencia de Cobro</th>
+          <th>Origen</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let type of filteredPeriods">
+          <td class="period-cell">
+            <div class="cell-content">
+              <div class="period-cell__icon" aria-hidden="true">
+                <svg [lucideIcon]="icons.calendar" viewBox="0 0 24 24"></svg>
+              </div>
+
+              <div class="period-cell__meta">
+                <strong>{{ type.name }}</strong>
+                <small>{{ type.description }}</small>
+              </div>
+            </div>
+          </td>
+
+          <td class="duration-cell">
+            <div class="duration-content">
+              <svg [lucideIcon]="icons.clock" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              <span>{{ type.cycleDuration }}</span>
+            </div>
+          </td>
+
+          <td class="frequency-cell">
+            <span class="frequency-text">{{ type.chargeFrequency }}</span>
+          </td>
+
+          <td class="origin-cell">
+            <span class="origin-badge">
+              <svg [lucideIcon]="icons.shieldCheck" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              {{ type.origin }}
+            </span>
+          </td>
+
+          <td class="status-cell">
+            <span class="badge-status" [class.status-activo]="type.status === 'Activo'" [class.status-inactivo]="type.status === 'Inactivo'">{{ type.status }}</span>
+          </td>
+
+          <td class="actions-cell">
+            <div class="actions" aria-label="Acciones del periodo">
+              <button class="action-btn" type="button" aria-label="Editar periodo" (click)="openEditModal(type)">
+                <svg [lucideIcon]="icons.pencil" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn" type="button" aria-label="Activar o desactivar periodo" (click)="onToggleStatusClick(type)">
+                <svg [lucideIcon]="icons.power" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn danger" type="button" aria-label="Eliminar periodo" (click)="onDeleteClick(type)">
+                <svg [lucideIcon]="icons.trash" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isCreateModalOpen || isEditModalOpen" (click)="closeFormModals()">
+    <div class="modal-container period-form-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group">
+          <div class="header-icon"><svg [lucideIcon]="icons.calendar" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+          <div><h2>{{ isEditModalOpen ? 'Editar Tipo de Contratación' : 'Nuevo Periodo de Contratación' }}</h2><p class="modal-subtitle">Defina ciclos de cobro personalizados (Semana, 30 Días, Semestral, Anual...)</p></div>
+        </div>
+        <button class="btn-close" type="button" aria-label="Cerrar" (click)="closeFormModals()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+      </div>
+      <form (ngSubmit)="savePeriod()">
+        <div class="modal-body">
+          <div class="form-group full-width"><label class="form-label" for="periodName">Nombre del Periodo <span class="required">*</span></label><div class="input-with-icon"><svg [lucideIcon]="icons.calendar" viewBox="0 0 24 24" aria-hidden="true"></svg><input id="periodName" class="form-input" type="text" [(ngModel)]="periodForm.name" name="name" required placeholder="Ej. Trimestral (90 Días), Bimensual, Bienal" /></div></div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label" for="durationDays">Duración del Ciclo (Días) <span class="required">*</span></label><div class="input-with-icon"><svg [lucideIcon]="icons.clock" viewBox="0 0 24 24" aria-hidden="true"></svg><input id="durationDays" class="form-input" type="number" min="0" [(ngModel)]="periodForm.durationDays" name="durationDays" required /></div><span class="field-hint">(7 p/ semana, 30 p/ mes, 180 p/ semestral, 365 p/ anual, 0 p/ pago único)</span></div>
+            <div class="form-group"><label class="form-label" for="billingFactor">Factor para Cobro Mensual (Meses)</label><input id="billingFactor" class="form-input" type="number" min="0" step="0.25" [(ngModel)]="periodForm.billingFactor" name="billingFactor" /><span class="field-hint">Meses por ciclo (ej. 6 para semestral, 12 para anual)</span></div>
+          </div>
+          <div class="form-group full-width"><label class="form-label" for="periodDescription">Descripción Informativa</label><div class="input-with-icon textarea-wrapper"><svg [lucideIcon]="icons.fileText" viewBox="0 0 24 24" aria-hidden="true"></svg><textarea id="periodDescription" class="form-textarea" [(ngModel)]="periodForm.description" name="description" rows="3" placeholder="Explicación del esquema de contratación..."></textarea></div></div>
+          <div class="form-group full-width"><label class="form-label" for="periodStatus">Estado</label><select id="periodStatus" class="form-select" [(ngModel)]="periodForm.status" name="status"><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select></div>
+        </div>
+        <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeFormModals()">Cancelar</button><button class="btn-submit" type="submit">{{ isEditModalOpen ? 'Guardar Cambios' : 'Crear Periodo' }}</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isActivateModalOpen" (click)="closeModal()">
+    <div class="modal-container modal-alert" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="alert-icon-box warning"><svg [lucideIcon]="icons.triangleAlert" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+        <button class="btn-close" type="button" aria-label="Cerrar" (click)="closeModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+      </div>
+      <div class="modal-body"><h3 class="alert-title">¿Activar Periodo?</h3><p class="alert-message">¿Desea habilitar el periodo "{{ selectedPeriod?.name }}" para asignación?</p></div>
+      <div class="modal-footer"><button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button><button type="button" class="btn-warning" (click)="confirmActivatePeriod()">Sí, continuar</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isDeactivateModalOpen" (click)="closeModal()">
+    <div class="modal-container modal-alert" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="alert-icon-box warning"><svg [lucideIcon]="icons.triangleAlert" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+        <button class="btn-close" type="button" aria-label="Cerrar" (click)="closeModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+      </div>
+      <div class="modal-body"><h3 class="alert-title">¿Desactivar Periodo?</h3><p class="alert-message">¿Está seguro de desactivar el periodo "{{ selectedPeriod?.name }}"?</p></div>
+      <div class="modal-footer"><button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button><button type="button" class="btn-warning" (click)="confirmDeactivatePeriod()">Sí, continuar</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isDeleteModalOpen" (click)="closeModal()">
+    <div class="modal-container modal-alert" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="alert-icon-box danger"><svg [lucideIcon]="icons.alertCircle" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+        <button class="btn-close" type="button" aria-label="Cerrar" (click)="closeModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+      </div>
+      <div class="modal-body"><h3 class="alert-title">¿Eliminar Periodo de Contratación?</h3><p class="alert-message">¿Está seguro de eliminar el periodo "{{ selectedPeriod?.name }}"?</p></div>
+      <div class="modal-footer"><button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button><button type="button" class="btn-danger" (click)="confirmDeletePeriod()">Sí, continuar</button></div>
+    </div>
+  </div>
+
+  <div class="toast-notification" *ngIf="toastVisible" role="status">
+    <div class="toast-icon"><svg [lucideIcon]="icons.info" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+    <p>{{ toastMessage }}</p>
+    <button class="toast-close" type="button" aria-label="Cerrar notificación" (click)="closeToast()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+  </div>
+</section>

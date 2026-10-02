@@ -1,0 +1,35 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  height: 84px;
+  padding: 18px 24px 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.topbar__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(91, 103, 188, 0.16);
+  border: 1px solid rgba(148, 163, 184, 0.13);
+  color: #dbeafe;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.topbar__chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(147, 197, 253, 0.15);
+  color: #b6d8ff;
+  font-size: 0.8rem;
+}

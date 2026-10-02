@@ -1,0 +1,151 @@
+<section class="catalog-page">
+  <header class="section-header">
+    <div class="section-header__title-wrap">
+      <span class="section-header__icon" aria-hidden="true">
+        <svg [lucideIcon]="icons.package" viewBox="0 0 24 24"></svg>
+      </span>
+
+      <div class="section-header__text">
+        <h1>Catálogo de Servicios y Productos</h1>
+        <p>Administre los productos y servicios disponibles para asignación de contratos</p>
+      </div>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="openCreateModal()">+ Crear Servicio</button>
+  </header>
+
+  <div class="toolbar">
+    <label class="search-field" aria-label="Buscar servicio">
+      <svg [lucideIcon]="icons.search" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <input type="text" placeholder="Buscar por nombre, código o descripción..." [(ngModel)]="searchQuery" />
+    </label>
+
+    <select class="filter-btn" [(ngModel)]="selectedCategory" aria-label="Filtrar por categoría">
+      <option value="">Todas las Categorías</option>
+      <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+    </select>
+  </div>
+
+  <div class="table-panel">
+    <table class="catalog-table" aria-label="Catálogo de servicios">
+      <thead>
+        <tr>
+          <th>Código / Servicio</th>
+          <th>Categoría</th>
+          <th>Descripción</th>
+          <th>Precio Base</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let service of filteredServices">
+          <td class="service-cell">
+            <div class="cell-content">
+              <div class="service-cell__icon" aria-hidden="true">
+                <svg [lucideIcon]="icons.tag" viewBox="0 0 24 24"></svg>
+              </div>
+
+              <div class="service-cell__meta">
+                <strong>{{ service.name }}</strong>
+                <small>{{ service.code }}</small>
+              </div>
+            </div>
+          </td>
+
+          <td class="category-cell">
+            <span class="category-badge">{{ service.category }}</span>
+          </td>
+
+          <td class="description-cell">
+            <span class="description-text">{{ service.description }}</span>
+          </td>
+
+          <td class="price-cell">
+            <span class="price-value">US${{ service.basePrice | number: '1.2-2' }}</span>
+          </td>
+
+          <td class="status-cell">
+            <span class="status-badge" [class.is-inactive]="service.status === 'Inactivo'">{{ service.status === 'Activo (Disponible)' ? 'Disponible' : service.status }}</span>
+          </td>
+
+          <td class="actions-cell">
+            <div class="actions" aria-label="Acciones del servicio">
+              <button class="action-btn" type="button" aria-label="Editar servicio" (click)="openEditModal(service)">
+                <svg [lucideIcon]="icons.pencil" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn" type="button" aria-label="Activar o desactivar servicio" (click)="onToggleStatusClick(service)">
+                <svg [lucideIcon]="icons.power" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn danger" type="button" aria-label="Eliminar servicio" (click)="openDeleteModal(service)">
+                <svg [lucideIcon]="icons.trash" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isFormModalOpen" (click)="closeFormModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-heading">
+          <div class="modal-icon"><svg [lucideIcon]="icons.package" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+          <div><h2>{{ isEditing ? 'Editar Servicio / Producto' : 'Nuevo Servicio o Producto' }}</h2><p>Agregue o edite elementos del catálogo para asignar a clientes</p></div>
+        </div>
+        <button class="btn-close" type="button" aria-label="Cerrar" (click)="closeFormModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group full-width"><label for="serviceName">Nombre del Servicio / Producto <span class="required">*</span></label><div class="input-wrap"><svg [lucideIcon]="icons.package" viewBox="0 0 24 24"></svg><input id="serviceName" class="form-input" type="text" [(ngModel)]="formData.name" placeholder="Ej. Mantenimiento Web Premium, Licencia ERP" /></div></div>
+        <div class="form-grid">
+          <div class="input-group"><label for="serviceCode">Código de Identificación</label><input id="serviceCode" class="form-input" type="text" [(ngModel)]="formData.code" placeholder="SRV-WEB-001" /></div>
+          <div class="input-group"><label for="serviceCategory">Categoría</label><select id="serviceCategory" class="form-input" [(ngModel)]="formData.category"><option *ngFor="let category of categories" [value]="category">{{ category }}</option></select></div>
+          <div class="input-group"><label for="servicePrice">Precio Base Estándar ($)</label><input id="servicePrice" class="form-input" type="number" min="0" step="0.01" [(ngModel)]="formData.basePrice" /></div>
+          <div class="input-group" *ngIf="isEditing"><label for="serviceStatus">Estado</label><select id="serviceStatus" class="form-input" [(ngModel)]="formData.status"><option *ngFor="let status of statuses" [value]="status">{{ status }}</option></select></div>
+        </div>
+        <div class="input-group full-width"><label for="serviceDescription">Descripción del Servicio / Producto</label><div class="input-wrap input-wrap--top"><svg [lucideIcon]="icons.fileText" viewBox="0 0 24 24"></svg><textarea id="serviceDescription" class="form-input" [(ngModel)]="formData.description" placeholder="Describa el alcance del servicio..."></textarea></div></div>
+      </div>
+      <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeFormModal()">Cancelar</button><button class="btn-primary" type="button" (click)="saveService()">{{ isEditing ? 'Guardar Cambios' : 'Crear Servicio' }}</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isDeactivateModalOpen" (click)="closeDeactivateModal()">
+    <div class="modal-container compact-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header"><div class="modal-heading"><div class="modal-icon modal-icon--orange"><svg [lucideIcon]="icons.alertTriangle" viewBox="0 0 24 24"></svg></div><div><h2>¿Desactivar Servicio?</h2><p>Confirmación requerida</p></div></div><button class="btn-close" type="button" aria-label="Cerrar" (click)="closeDeactivateModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button></div>
+      <div class="modal-body"><p class="confirmation-copy">¿Está seguro de desactivar el servicio <strong>"{{ selectedService?.name }}"</strong>?</p></div>
+      <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeDeactivateModal()">Cancelar</button><button class="btn-warning" type="button" (click)="confirmDeactivate()">Sí, continuar</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isActivateModalOpen" (click)="closeActivateModal()">
+    <div class="modal-container compact-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-heading">
+          <div class="modal-icon modal-icon--orange"><svg [lucideIcon]="icons.alertTriangle" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+          <div><h2>¿Activar Servicio?</h2><p>Confirmación requerida</p></div>
+        </div>
+        <button class="btn-close" type="button" aria-label="Cerrar" (click)="closeActivateModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+      </div>
+      <div class="modal-body"><p class="confirmation-copy">¿Desea volver a poner en oferta el servicio <strong>"{{ selectedService?.name }}"</strong>?</p></div>
+      <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeActivateModal()">Cancelar</button><button class="btn-warning" type="button" (click)="confirmActivateService()">Sí, continuar</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isDeleteModalOpen" (click)="closeDeleteModal()">
+    <div class="modal-container compact-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header"><div class="modal-heading"><div class="modal-icon modal-icon--red"><svg [lucideIcon]="icons.alertTriangle" viewBox="0 0 24 24"></svg></div><div><h2>¿Eliminar Servicio del Catálogo?</h2><p>Esta acción no se puede deshacer</p></div></div><button class="btn-close" type="button" aria-label="Cerrar" (click)="closeDeleteModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button></div>
+      <div class="modal-body"><p class="confirmation-copy">¿Está seguro de eliminar el servicio <strong>"{{ selectedService?.name }}"</strong> ({{ selectedService?.code }})?</p></div>
+      <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeDeleteModal()">Cancelar</button><button class="btn-danger" type="button" (click)="confirmDelete()">Sí, continuar</button></div>
+    </div>
+  </div>
+
+  <div class="toast-notification" *ngIf="toastVisible" role="status">
+    <div class="toast-icon"><svg [lucideIcon]="icons.info" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+    <div class="toast-content"><strong>{{ toastTitle }}</strong><p>{{ toastMessage }}</p></div>
+    <button class="toast-close" type="button" aria-label="Cerrar notificación" (click)="closeToast()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+  </div>
+</section>

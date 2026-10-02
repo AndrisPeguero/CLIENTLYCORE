@@ -1,0 +1,217 @@
+<section class="contracted-page">
+  <header class="section-header">
+    <div class="section-header__title-wrap">
+      <span class="section-header__icon" aria-hidden="true">
+        <svg [lucideIcon]="icons.fileText" viewBox="0 0 24 24"></svg>
+      </span>
+
+      <div class="section-header__text">
+        <h1>Servicios y Productos Contratados por Clientes</h1>
+        <p>Listado general de contrataciones, fechas de renovación periódicas y cobros</p>
+      </div>
+    </div>
+
+    <button class="primary-btn" type="button" (click)="openNewContractModal()">+ Nueva Contratación</button>
+  </header>
+
+  <div class="toolbar">
+    <label class="search-field" aria-label="Buscar contratación">
+      <svg [lucideIcon]="icons.search" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <input type="text" placeholder="Buscar por cliente, empresa o servicio contratado..." [(ngModel)]="searchTerm" />
+    </label>
+
+    <div class="filter-control">
+      <input class="filter-input" list="client-filter-options" type="text" placeholder="Todos los Clientes" [(ngModel)]="clientFilter" (ngModelChange)="selectedClientFilter = clientFilter" />
+      <datalist id="client-filter-options">
+        <option *ngFor="let client of filteredClients" [value]="client"></option>
+      </datalist>
+    </div>
+
+    <select class="filter-btn" [(ngModel)]="statusFilter" aria-label="Filtrar por estado">
+      <option value="">Todos los Estados</option>
+      <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+    </select>
+
+    <select class="filter-btn" [(ngModel)]="periodFilter" aria-label="Filtrar por periodo">
+      <option value="">Todos los Periodos</option>
+      <option *ngFor="let period of periods" [value]="period">{{ period }}</option>
+    </select>
+  </div>
+
+  <div class="table-panel">
+    <table class="contracts-table" aria-label="Servicios contratados">
+      <thead>
+        <tr>
+          <th>Cliente / Empresa</th>
+          <th>Servicio Contratado</th>
+          <th>Periodo</th>
+          <th>F. Contratación</th>
+          <th>F. Renovación</th>
+          <th>Cobro Mensual</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let item of filteredContracts">
+          <td class="client-cell">
+            <div class="cell-content">
+              <div class="client-cell__icon" aria-hidden="true">
+                <svg [lucideIcon]="icons.building" viewBox="0 0 24 24"></svg>
+              </div>
+
+              <div class="client-cell__meta">
+                <strong>{{ item.client }}</strong>
+                <small>{{ item.contact }}</small>
+              </div>
+            </div>
+          </td>
+
+          <td class="service-cell">
+            <div class="cell-content">
+              <div class="service-cell__badge" aria-hidden="true">
+                <svg [lucideIcon]="icons.package" viewBox="0 0 24 24"></svg>
+              </div>
+
+              <div class="service-cell__meta">
+                <strong>{{ item.serviceName }}</strong>
+                <small>{{ item.category }}</small>
+              </div>
+            </div>
+          </td>
+
+          <td>
+            <span class="period-pill">{{ item.period }}</span>
+          </td>
+
+          <td class="date-cell">
+            <div class="date-cell__inner">
+              <svg [lucideIcon]="icons.calendar" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              <span>{{ item.contractDate }}</span>
+            </div>
+          </td>
+
+          <td class="date-cell">
+            <ng-container *ngIf="item.renewalDate; else noRenewal">
+              <div class="date-cell__inner">
+                <svg [lucideIcon]="icons.clock" viewBox="0 0 24 24" aria-hidden="true"></svg>
+                <span>{{ item.renewalDate }}</span>
+              </div>
+              <small class="renewal-label">{{ item.renewalLabel }}</small>
+            </ng-container>
+
+            <ng-template #noRenewal>
+              <span class="na-text">N/A</span>
+            </ng-template>
+          </td>
+
+          <td class="monthly-cell">
+            <ng-container *ngIf="item.monthly !== 'N/A'; else noMonthly">
+              <span class="monthly-value">{{ item.monthly }}</span>
+            </ng-container>
+            <ng-template #noMonthly>
+              <span class="na-text">N/A</span>
+            </ng-template>
+          </td>
+
+          <td>
+            <span
+              class="status-badge"
+              [class.status-activo]="getContractStatus(item) === 'Activo'"
+              [class.status-pendiente]="getContractStatus(item) === 'Pendiente de Renovación'"
+              [class.status-vencido]="getContractStatus(item) === 'Vencido' || getContractStatus(item) === 'Vendido / Vencido'">
+              {{ getContractStatus(item) }}
+            </span>
+          </td>
+
+          <td class="actions-cell">
+            <div class="actions" aria-label="Acciones de contratación">
+              <button class="action-btn" type="button" aria-label="Renovar" (click)="openRenewModal(item)">
+                <svg [lucideIcon]="icons.refresh" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn" type="button" aria-label="Editar contratación" (click)="openEditModal(item)">
+                <svg [lucideIcon]="icons.pencil" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+
+              <button class="action-btn danger" type="button" aria-label="Eliminar contratación" (click)="openDeleteModal(item)">
+                <svg [lucideIcon]="icons.trash" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isFormModalOpen" (click)="closeFormModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-heading">
+          <div class="modal-icon"><svg [lucideIcon]="icons.fileText" viewBox="0 0 24 24" aria-hidden="true"></svg></div>
+          <div><h2>{{ isEditing ? 'Editar Contratación' : 'Registrar Contratación' }}</h2><p>Complete los datos del servicio contratado</p></div>
+        </div>
+        <button class="btn-close" type="button" aria-label="Cerrar" (click)="closeFormModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button>
+      </div>
+      <div class="modal-body form-grid">
+        <div class="input-group">
+          <label for="contractClient">Cliente <span class="required">*</span></label>
+          <input id="contractClient" class="plain-input" type="text" [(ngModel)]="formData.client" (focus)="isClientDropdownOpen = true" placeholder="Buscar cliente..." />
+          <div class="custom-dropdown" *ngIf="isClientDropdownOpen">
+            <button type="button" *ngFor="let client of filteredClients" (click)="selectClient(client)">{{ client }}</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="contractService">Servicio / Producto <span class="required">*</span></label>
+          <input id="contractService" class="plain-input" type="text" [(ngModel)]="formData.serviceName" (focus)="isServiceDropdownOpen = true" placeholder="Buscar servicio..." />
+          <div class="custom-dropdown" *ngIf="isServiceDropdownOpen">
+            <button type="button" *ngFor="let service of filteredServices" (click)="selectService(service)">{{ service }}</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="contractPeriod">Tipo / Periodo de Contratación <span class="required">*</span></label>
+          <select id="contractPeriod" class="plain-input" [(ngModel)]="formData.period"><option *ngFor="let period of periods" [value]="period">{{ period }}</option></select>
+        </div>
+        <div class="input-group">
+          <label for="contractDate">Fecha de Contratación</label>
+          <input id="contractDate" class="plain-input" type="date" [(ngModel)]="formData.contractDate" />
+        </div>
+        <div class="input-group">
+          <label for="contractAmount">Monto ($) <span class="required">*</span></label>
+          <input id="contractAmount" class="plain-input" type="number" min="0" step="0.01" [(ngModel)]="formData.amount" placeholder="0.00" />
+        </div>
+        <div class="input-group" *ngIf="isEditing">
+          <label for="contractStatus">Estado</label>
+          <select id="contractStatus" class="plain-input" [(ngModel)]="formData.status">
+            <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeFormModal()">Cancelar</button><button class="btn-primary" type="button" (click)="saveContract()">{{ isEditing ? 'Guardar Cambios' : 'Registrar Contratación' }}</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isRenewModalOpen" (click)="closeRenewModal()">
+    <div class="modal-container compact-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header"><div class="modal-heading"><div class="modal-icon modal-icon--orange"><svg [lucideIcon]="icons.refresh" viewBox="0 0 24 24"></svg></div><div><h2>Renovar Contratación</h2><p>{{ selectedContract?.client }} · {{ selectedContract?.serviceName }}</p></div></div><button class="btn-close" type="button" aria-label="Cerrar" (click)="closeRenewModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button></div>
+      <div class="modal-body">
+        <div class="info-card-box">
+          <div class="info-row"><strong>Cliente:</strong> {{ selectedContract?.client }}</div>
+          <div class="info-row"><strong>Servicio:</strong> {{ selectedContract?.serviceName }}</div>
+          <div class="info-row"><span><strong>Periodo Actual:</strong> {{ selectedContract?.period }}</span><span> • <strong>Fecha actual de renovación:</strong> {{ selectedContract?.renewalDate || 'Sin fecha' }}</span></div>
+        </div>
+        <div class="input-group"><label for="newRenewalDate">Nueva Fecha de Renovación <span class="required">*</span></label><input id="newRenewalDate" class="plain-input" type="date" [(ngModel)]="newRenewalDate" /></div>
+      </div>
+      <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeRenewModal()">Cancelar</button><button class="btn-warning" type="button" (click)="confirmRenewal()">Confirmar Renovación</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isDeleteModalOpen" (click)="closeDeleteModal()">
+    <div class="modal-container compact-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header"><div class="modal-heading"><div class="modal-icon modal-icon--red"><svg [lucideIcon]="icons.alertTriangle" viewBox="0 0 24 24"></svg></div><div><h2>¿Eliminar Contratación?</h2><p>Esta acción no se puede deshacer</p></div></div><button class="btn-close" type="button" aria-label="Cerrar" (click)="closeDeleteModal()"><svg [lucideIcon]="icons.x" viewBox="0 0 24 24"></svg></button></div>
+      <div class="modal-body"><div class="confirmation-copy">¿Está seguro de eliminar la contratación de <strong>{{ selectedContract?.client }}</strong> para <strong>{{ selectedContract?.serviceName }}</strong>?</div></div>
+      <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeDeleteModal()">Cancelar</button><button class="btn-danger" type="button" (click)="confirmDelete()">Sí, continuar</button></div>
+    </div>
+  </div>
+</section>

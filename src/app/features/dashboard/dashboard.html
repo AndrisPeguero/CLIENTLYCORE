@@ -1,0 +1,113 @@
+<section class="dashboard-page">
+  <div class="hero-panel">
+    <div class="hero-panel__badge">
+      <span class="hero-panel__badge-icon">◌</span>
+      Control de Contrataciones y Renovaciones
+    </div>
+
+    <h1>Resumen General de Clientes y Servicios</h1>
+
+    <p>
+      Consulte los servicios activos, controle las fechas de renovación periódicas (semanal,
+      mensual, semestral, anual) y gestione cobros con notificaciones al instante.
+    </p>
+
+    <div class="hero-panel__actions">
+      <button class="primary-btn" type="button" (click)="goToNewContract()">+ Asignar Nuevo Servicio</button>
+      <button class="secondary-btn" type="button" (click)="goToClientsDirectory()">Ver Directorio de Clientes →</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card" *ngFor="let item of kpis">
+      <span class="kpi-title">{{ item.label }}</span>
+      <div class="kpi-body">
+        <div class="kpi-value-container">
+          <span class="kpi-number" [ngClass]="{ 'text-amber': item.theme === 'amber' }">
+            {{ item.value }}
+          </span>
+          <span class="kpi-subtitle" [ngClass]="{ 'kpi-badge-green': item.status && item.kind === 'clients' }">
+            {{ item.status }}
+          </span>
+        </div>
+        <div class="kpi-icon-box" [ngClass]="'icon-' + item.theme">
+          <svg [lucideIcon]="item.icon" viewBox="0 0 24 24" aria-hidden="true"></svg>
+        </div>
+      </div>
+      <span class="kpi-footer">{{ item.helper }}</span>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <section class="panel renewals-panel">
+      <div class="panel__header">
+        <div class="panel__title-wrap">
+          <span class="panel__icon">◌</span>
+          <h2>Próximas Renovaciones</h2>
+        </div>
+        <button class="panel__link" type="button" (click)="goToAllContractedServices()">Ver todos ({{ totalContractedServices }}) →</button>
+      </div>
+
+      <div class="renewal-list">
+        <article class="renewal-item" *ngFor="let item of renewals">
+          <div class="renewal-item__main">
+            <div class="renewal-item__topline">
+              <h3>{{ item.name }}</h3>
+              <span class="renewal-item__badge">Renueva en {{ item.days }} días</span>
+            </div>
+
+            <p class="renewal-item__service">Servicio: {{ item.service }}</p>
+
+            <div class="renewal-item__meta">
+              <span>Periodo: {{ item.period }}</span>
+              <span>Cobro: {{ item.amount }}</span>
+              <span>Fecha renovación: {{ item.renewalDate }}</span>
+            </div>
+          </div>
+
+          <button class="action-btn" type="button" (click)="openRenewModal(item)">Renovar</button>
+        </article>
+      </div>
+    </section>
+
+    <aside class="panel catalog-panel">
+      <div class="panel__header">
+        <div class="panel__title-wrap">
+          <h2>Catálogo de Servicios</h2>
+        </div>
+      </div>
+
+      <p class="catalog-summary">{{ catalog.length }} servicios registrados listos para ofertar y contratar</p>
+
+      <div class="catalog-list">
+        <div class="catalog-item" *ngFor="let item of catalog">
+          <div class="catalog-item__info">
+            <h3>{{ item.name }}</h3>
+            <small>{{ item.subtitle }}</small>
+          </div>
+          <strong>{{ item.price }}</strong>
+        </div>
+      </div>
+
+      <button class="catalog-btn" type="button" (click)="goToCatalogManagement()">Gestionar Catálogo de Servicios</button>
+    </aside>
+  </div>
+
+  <div class="modal-overlay" *ngIf="isRenewModalOpen" (click)="closeRenewModal()">
+    <div class="renew-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-group"><div class="header-icon orange-icon">↻</div><div><h2>Renovar Contratación</h2><p class="modal-subtitle">Extienda la vigencia del servicio contratado por el cliente</p></div></div>
+        <button class="btn-close" type="button" aria-label="Cerrar" (click)="closeRenewModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="contract-info-card" *ngIf="selectedContractForRenewal">
+          <p class="info-row"><strong>Cliente:</strong> {{ selectedContractForRenewal.name }}</p>
+          <p class="info-row"><strong>Servicio:</strong> {{ selectedContractForRenewal.service }}</p>
+          <p class="info-row subtext"><strong>Periodo Actual:</strong> {{ selectedContractForRenewal.period }} • <strong>Fecha actual de renovación:</strong> {{ selectedContractForRenewal.renewalDate }}</p>
+        </div>
+        <div class="form-group"><label class="form-label" for="dashboardRenewalDate">Nueva Fecha de Renovación <span class="required">*</span></label><div class="input-with-icon"><span class="input-icon">□</span><input id="dashboardRenewalDate" class="form-input" type="date" [(ngModel)]="newRenewalDate" required /></div><span class="field-hint">Calculada automáticamente según el ciclo del tipo de contratación.</span></div>
+      </div>
+      <div class="modal-footer"><button class="btn-cancel" type="button" (click)="closeRenewModal()">Cancelar</button><button class="btn-submit orange-btn" type="button" (click)="confirmRenewal()">✓ Confirmar Renovación</button></div>
+    </div>
+  </div>
+</section>
